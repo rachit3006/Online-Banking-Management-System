@@ -1,0 +1,136 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+
+typedef struct normalUser
+{
+    int userID;
+    char name[30];
+    char password[10];
+    int account_no;
+    float balance;
+    char status[20];
+} normalUser;
+
+typedef struct jointAccountUser
+{
+    int userID;
+    char name1[30];
+    char name2[30];
+    char password[10];
+    int account_no;
+    float balance;
+    char status[20];
+} jointAccountUser;
+
+typedef struct admin
+{
+    int userID;
+    char username[30];
+    char password[10];
+} admin;
+
+int getNewUserID1();
+int getNewUserID2();
+int getNewUserID3();
+
+int getNewUserID1()
+{
+    int fd = open("NormalUserDetails", O_RDONLY, 0744);
+    normalUser record;
+    record.userID = 0;
+    lseek(fd, -sizeof(normalUser), SEEK_END);
+    read(fd, &record, sizeof(normalUser));
+    close(fd);
+    return record.userID + 1;
+}
+
+int getNewUserID2()
+{
+    int fd = open("JointAccountUserDetails", O_RDONLY, 0744);
+    jointAccountUser record;
+    record.userID = 0;
+    lseek(fd, -sizeof(jointAccountUser), SEEK_END);
+    read(fd, &record, sizeof(jointAccountUser));
+    close(fd);
+    return record.userID + 1;
+}
+
+int getNewUserID3()
+{
+    int fd = open("AdminDetails", O_RDONLY, 0744);
+    admin record;
+    record.userID = 0;
+    lseek(fd, -sizeof(admin), SEEK_END);
+    read(fd, &record, sizeof(admin));
+    close(fd);
+    return record.userID + 1;
+}
+
+int main()
+{
+    int fd = open("AdminDetails", O_RDWR | O_CREAT, 0744);
+    int choice = 1;
+    admin newAdmin;
+
+    while (choice)
+    {
+        printf("Please enter the name of the admin: ");
+        scanf(" %[^\n]", newAdmin.username);
+        printf("Please enter the password(max 10 characters): ");
+        scanf(" %[^\n]", newAdmin.password);
+        newAdmin.userID = getNewUserID3();
+        printf("Your userID is : %d\n", newAdmin.userID);
+        write(fd, &newAdmin, sizeof(admin));
+        printf("Do you want to continue(0/1)? ");
+        scanf("%d", &choice);
+    }
+    close(fd);
+
+    fd = open("NormalUserDetails", O_RDWR | O_CREAT, 0744);
+    choice = 1;
+    normalUser newNUser;
+
+    while (choice)
+    {
+        printf("Please enter the name of the normal user: ");
+        scanf(" %[^\n]", newNUser.name);
+        printf("Please enter the password(max 10 characters): ");
+        scanf(" %[^\n]", newNUser.password);
+        newNUser.userID = getNewUserID1();
+        newNUser.balance = 1000;
+        newNUser.account_no = (newNUser.userID - 1000) + 100000;
+        printf("Your userID is : %d\n", newNUser.userID);
+        strcpy(newNUser.status, "ACTIVE");
+        write(fd, &newNUser, sizeof(normalUser));
+        printf("Do you want to continue(0/1)? ");
+        scanf("%d", &choice);
+    }
+    close(fd);
+
+    fd = open("JointAccountUserDetails", O_RDWR | O_CREAT, 0744);
+    choice = 1;
+    jointAccountUser newJUser;
+
+    while (choice)
+    {
+        printf("Please enter the main name of the joint user: ");
+        scanf(" %[^\n]", newJUser.name1);
+        printf("Please enter the second name of the joint user: ");
+        scanf(" %[^\n]", newJUser.name2);
+        printf("Please enter the password(max 10 characters): ");
+        scanf(" %[^\n]", newJUser.password);
+        newJUser.userID = getNewUserID2();
+        newJUser.balance = 1000;
+        newJUser.account_no = (newJUser.userID - 1000) + 100000;
+        printf("Your userID is : %d\n", newJUser.userID);
+        strcpy(newJUser.status, "ACTIVE");
+        write(fd, &newJUser, sizeof(jointAccountUser));
+        printf("Do you want to continue(0/1)? ");
+        scanf("%d", &choice);
+    }
+    close(fd);
+
+    return 0;
+}
